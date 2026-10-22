@@ -1,5 +1,5 @@
 import { handleUpdate, setWebhook, type Update } from "./bot";
-import { run } from "./run";
+import { run, sendOpenJobs } from "./run";
 import { adminChat } from "./subscribers";
 import { sendMessage } from "./telegram";
 
@@ -24,6 +24,7 @@ export default {
   // GET /run?key=...          → busca e envia agora
   // GET /run?key=...&dry=1    → só mostra o que seria enviado
   // GET /run?key=...&ping=1   → manda uma mensagem de teste para o administrador
+  // GET /run?key=...&open=ID  → manda as vagas abertas agora só para o chat ID (sem marcar como vistas)
   async fetch(req: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(req.url);
     if (url.pathname === "/telegram" && req.method === "POST") {
@@ -39,6 +40,8 @@ export default {
     if (url.pathname !== "/run" && url.pathname !== "/setup") return new Response("ApogeuCVBot ok\n");
     if (!env.RUN_KEY || url.searchParams.get("key") !== env.RUN_KEY) return new Response("forbidden\n", { status: 403 });
     if (url.pathname === "/setup") return Response.json(await setWebhook(env, url.origin));
+    const openFor = url.searchParams.get("open");
+    if (openFor) return Response.json({ sent: await sendOpenJobs(env, openFor) });
     if (url.searchParams.has("ping")) {
       await sendMessage(env.TELEGRAM_TOKEN, adminChat(env.CHAT_IDS), "✅ Bot de vagas funcionando.");
       return new Response("ping enviado\n");

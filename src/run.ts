@@ -7,6 +7,7 @@ import type { Job } from "./types";
 
 const SEEN_TTL = 60 * 86_400; // lembra vagas enviadas por 60 dias
 const WARN_TTL = 86_400; // avisa no máximo 1 vez por dia sobre cada fonte com problema
+const FAIL_TTL = 2 * 86_400; // falha anterior só conta se for de até ~2 dias atrás (as execuções são 2 por dia)
 
 interface SourceReport {
   raw: number; // vagas lidas na fonte, antes do filtro
@@ -35,9 +36,18 @@ async function collect(): Promise<{ jobs: Job[]; report: Record<string, SourceRe
 }
 
 // Uma fonte que dá erro ou volta vazia provavelmente mudou o site: avisa o primeiro chat.
+// Só avisa na segunda execução seguida com problema, porque bloqueios de um horário só são comuns.
 async function warnBroken(env: Env, chatId: string, report: Record<string, SourceReport>) {
   for (const [name, r] of Object.entries(report)) {
-    if (!r.error && r.raw > 0) continue;
+    const failKey = `fail:${name}`;
+    if (!r.error && r.raw > 0) {
+      await env.SEEN.delete(failKey);
+      continue;
+    }
+    if (!(await env.SEEN.get(failKey))) {
+      await env.SEEN.put(failKey, "1", { expirationTtl: FAIL_TTL });
+      continue;
+    }
     const key = `warn:${name}`;
     if (await env.SEEN.get(key)) continue;
     const why = r.error ? `erro: ${r.error}` : "nenhuma vaga lida (o site pode ter mudado)";
@@ -56,6 +66,15 @@ async function deliver(env: Env, chatId: string, text: string, errors: string[])
       await removeSubscriber(env.SEEN, chatId);
     }
   }
+}
+
+// Para quem acabou de se cadastrar: manda só para esse chat todas as vagas abertas agora
+// (inclusive as já enviadas aos outros), sem marcar nada como visto.
+export async function sendOpenJobs(env: Env, chatId: string): Promise<number> {
+  const { jobs } = await collect();
+  if (jobs.length === 0) return 0;
+  for (const text of buildMessages(jobs, "abertas")) await sendMessage(env.TELEGRAM_TOKEN, chatId, text);
+  return jobs.length;
 }
 
 // Busca em todas as fontes e envia as vagas novas para todos os cadastrados.

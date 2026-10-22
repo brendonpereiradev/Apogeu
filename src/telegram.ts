@@ -18,8 +18,11 @@ function formatJob(j: Job): string {
   return lines.join("\n");
 }
 
-export function buildMessages(jobs: Job[]): string[] {
-  const header = `✈️ <b>${jobs.length} ${jobs.length === 1 ? "vaga nova" : "vagas novas"} de turismo</b>`;
+export function buildMessages(jobs: Job[], kind: "novas" | "abertas" = "novas"): string[] {
+  const header =
+    kind === "novas"
+      ? `✈️ <b>${jobs.length} ${jobs.length === 1 ? "vaga nova" : "vagas novas"} de turismo</b>`
+      : `📋 <b>${jobs.length} ${jobs.length === 1 ? "vaga aberta" : "vagas abertas"} agora</b>`;
   const messages: string[] = [];
   let current = header;
   for (const j of jobs) {

@@ -1,9 +1,17 @@
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36";
 
+// Bloqueios anti-robô (403/429) e quedas (5xx) costumam ser passageiros: tenta mais 2 vezes com pausa.
+const RETRY = new Set([403, 429, 500, 502, 503, 504]);
+const PAUSES = [2_000, 5_000];
+
 async function get(url: string, accept: string): Promise<Response> {
-  const res = await fetch(url, { headers: { "User-Agent": UA, Accept: accept, "Accept-Language": "pt-BR" } });
-  if (!res.ok) throw new Error(`${new URL(url).hostname}: HTTP ${res.status}`);
-  return res;
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: accept, "Accept-Language": "pt-BR" } });
+    if (res.ok) return res;
+    if (!RETRY.has(res.status) || attempt >= PAUSES.length) throw new Error(`${new URL(url).hostname}: HTTP ${res.status}`);
+    await res.body?.cancel();
+    await new Promise((r) => setTimeout(r, PAUSES[attempt]));
+  }
 }
 
 export const getText = async (url: string) => (await get(url, "text/html")).text();

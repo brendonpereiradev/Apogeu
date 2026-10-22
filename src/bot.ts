@@ -1,5 +1,5 @@
 import type { Env } from "./index";
-import { run } from "./run";
+import { run, sendOpenJobs } from "./run";
 import { addSubscriber, adminChat, fixedChats, isSubscribed, removeSubscriber } from "./subscribers";
 import { sendMessage } from "./telegram";
 
@@ -49,6 +49,15 @@ export async function handleUpdate(env: Env, update: Update): Promise<void> {
       if (admin && admin !== chatId) {
         const user = msg.chat.username ? ` (@${esc(msg.chat.username)})` : "";
         await sendMessage(env.TELEGRAM_TOKEN, admin, `🆕 Novo cadastro: <b>${esc(name)}</b>${user} — chat ${chatId}`);
+      }
+      // As vagas abertas já foram enviadas a quem entrou antes; quem chega agora recebe todas uma vez.
+      try {
+        await reply("🔎 Buscando as vagas abertas agora para você, leva alguns segundos…");
+        const n = await sendOpenJobs(env, chatId);
+        if (n === 0) await reply("No momento não há vagas abertas no filtro. Assim que surgir alguma, você recebe aqui.");
+      } catch (e) {
+        console.error("vagas abertas no cadastro", e);
+        await reply("Não consegui buscar as vagas abertas agora. As próximas chegam no horário normal (08h e 18h).");
       }
       return;
     }
