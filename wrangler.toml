@@ -1,0 +1,14 @@
+name = "apogeu-vagas"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# 08h e 18h no horário de Brasília (UTC-3)
+[triggers]
+crons = ["0 11,21 * * *"]
+
+[[kv_namespaces]]
+binding = "SEEN"
+id = "70325a6f511d4cd996ece00b4021dd0c"
+
+[observability]
+enabled = true

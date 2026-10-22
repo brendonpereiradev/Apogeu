@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2147"/>
+      <stop offset="0.45" stop-color="#3B3F7A"/>
+      <stop offset="0.75" stop-color="#E0745A"/>
+      <stop offset="1" stop-color="#F8B25A"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#FFF4C2"/>
+      <stop offset="0.6" stop-color="#FFD36B"/>
+      <stop offset="1" stop-color="#FFA845"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFD36B" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FFD36B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1D3F6E"/>
+      <stop offset="1" stop-color="#0A1C38"/>
+    </linearGradient>
+  </defs>
+
+  <!-- céu -->
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="250" cy="210" r="4" opacity="0.8"/>
+    <circle cx="760" cy="170" r="5" opacity="0.9"/>
+    <circle cx="840" cy="300" r="3" opacity="0.6"/>
+    <circle cx="180" cy="360" r="3" opacity="0.6"/>
+    <circle cx="640" cy="120" r="3" opacity="0.7"/>
+  </g>
+
+  <!-- sol -->
+  <circle cx="512" cy="660" r="300" fill="url(#glow)"/>
+  <circle cx="512" cy="660" r="160" fill="url(#sun)"/>
+
+  <!-- trajetória até o apogeu -->
+  <path d="M150 700 Q331 345 512 345" fill="none" stroke="#FFFFFF" stroke-width="12"
+        stroke-linecap="round" stroke-dasharray="2 30" opacity="0.9"/>
+  <path d="M512 345 Q693 345 874 700" fill="none" stroke="#FFFFFF" stroke-width="8"
+        stroke-linecap="round" stroke-dasharray="2 30" opacity="0.3"/>
+
+  <!-- montanhas (Pão de Açúcar e Morro da Urca) -->
+  <g fill="#0B1A36">
+    <path d="M0 740 L0 660 C50 650 100 610 150 612 C205 615 230 670 255 700 C285 672 315 655 345 662 C380 670 400 710 412 740 Z"/>
+    <path d="M1024 740 L1024 620 C990 540 935 495 880 505 C830 515 805 600 790 660 C770 648 742 652 722 676 L700 740 Z"/>
+  </g>
+
+  <!-- mar -->
+  <rect y="738" width="1024" height="286" fill="url(#sea)"/>
+  <g fill="#FFD36B">
+    <rect x="392" y="760" width="240" height="12" rx="6" opacity="0.85"/>
+    <rect x="422" y="796" width="180" height="11" rx="5.5" opacity="0.65"/>
+    <rect x="452" y="830" width="120" height="10" rx="5" opacity="0.45"/>
+    <rect x="477" y="862" width="70" height="9" rx="4.5" opacity="0.3"/>
+  </g>
+
+  <!-- avião no ponto mais alto -->
+  <g transform="translate(512 345) scale(1.5)" fill="#FFFFFF">
+    <path d="M60 0 C60 -8 52 -9 44 -9 L-52 -8 C-58 -8 -60 -4 -60 0 C-60 4 -58 8 -52 8 L44 9 C52 9 60 8 60 0 Z"/>
+    <path d="M14 -8 L-12 -64 L-26 -64 L-14 -8 Z"/>
+    <path d="M14 8 L-12 64 L-26 64 L-14 8 Z"/>
+    <path d="M-40 -7 L-54 -28 L-62 -28 L-56 -6 Z"/>
+    <path d="M-40 7 L-54 28 L-62 28 L-56 6 Z"/>
+  </g>
+</svg>
