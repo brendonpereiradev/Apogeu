@@ -91,6 +91,7 @@ Apogeu/
 │   ├── telegram.ts                      # Formatação e envio das mensagens
 │   ├── types.ts                         # Tipos de vaga e de fonte
 │   └── util.ts                          # Requisições, textos e datas
+├── LICENSE                              # Licença MIT
 ├── package.json                         # Dependências de desenvolvimento
 ├── tsconfig.json                        # Configuração do TypeScript
 ├── wrangler.toml                        # Worker, cron e namespace KV
@@ -231,6 +232,8 @@ Com cerca de 37 requisições usadas nas buscas, sobra espaço para algumas pess
 
 ---
 
-## Licença e uso
+## Licença e termos
 
-Projeto pessoal publicado para fins de portfólio. As vagas, marcas e conteúdos exibidos pertencem aos respectivos sites e empresas. O acesso às fontes depende da disponibilidade e dos termos de uso de cada site.
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE).
+
+As dependências de terceiros mantêm suas próprias licenças. As vagas, marcas e conteúdos exibidos pertencem aos respectivos sites e empresas, e o acesso às fontes depende da disponibilidade e dos termos de uso de cada site.
