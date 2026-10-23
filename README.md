@@ -8,10 +8,6 @@
   <img src="assets/logo.png" alt="Logotipo do Apogeu" width="180" />
 </p>
 
-<p align="center">
-  <a href="https://t.me/ApogeuCVBot" target="_blank"><strong>@ApogeuCVBot</strong></a>
-</p>
-
 ---
 
 ## Sobre o projeto
