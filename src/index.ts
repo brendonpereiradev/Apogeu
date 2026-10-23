@@ -15,7 +15,7 @@ export interface Env {
 export default {
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(
-      run(env).then((r) => console.log(`encontradas=${r.found} enviadas=${r.sent}`, JSON.stringify(r.report))),
+      run(env, { announceEmpty: true }).then((r) => console.log(`encontradas=${r.found} enviadas=${r.sent}`, JSON.stringify(r.report))),
     );
   },
 

@@ -77,8 +77,16 @@ export async function sendOpenJobs(env: Env, chatId: string): Promise<number> {
   return jobs.length;
 }
 
+// Nos horários fixos, sem vaga nova, avisa todos que a busca rodou e diz quando é a próxima.
+function noNewsMessage(): string {
+  const hour = Number(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }));
+  const next = hour >= 8 && hour < 18 ? "18h" : "08h";
+  return `🔎 Nenhuma vaga nova de turismo desde o último envio. Próxima busca às ${next}.`;
+}
+
 // Busca em todas as fontes e envia as vagas novas para todos os cadastrados.
-export async function run(env: Env, opts: { dryRun?: boolean } = {}) {
+// announceEmpty: manda o aviso de "nenhuma vaga nova" (só nos horários fixos; o /vagas responde por conta própria).
+export async function run(env: Env, opts: { dryRun?: boolean; announceEmpty?: boolean } = {}) {
   const { jobs, report } = await collect();
 
   const seen = await Promise.all(jobs.map((j) => env.SEEN.get(j.id)));
@@ -92,6 +100,9 @@ export async function run(env: Env, opts: { dryRun?: boolean } = {}) {
         for (const chatId of chats) await deliver(env, chatId, text, sendErrors);
       }
       await Promise.all(fresh.map((j) => env.SEEN.put(j.id, "1", { expirationTtl: SEEN_TTL })));
+    } else if (opts.announceEmpty) {
+      const text = noNewsMessage();
+      for (const chatId of chats) await deliver(env, chatId, text, sendErrors);
     }
     const admin = adminChat(env.CHAT_IDS);
     if (admin) await warnBroken(env, admin, report);
