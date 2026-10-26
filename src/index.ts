@@ -1,4 +1,5 @@
 import { handleUpdate, setWebhook, type Update } from "./bot";
+import { drainQueue } from "./queue";
 import { run, sendOpenJobs } from "./run";
 import { adminChat } from "./subscribers";
 import { sendMessage } from "./telegram";
@@ -12,10 +13,23 @@ export interface Env {
   WEBHOOK_SECRET: string; // o Telegram manda no cabeçalho de cada update
 }
 
+// Cron de envio (igual ao wrangler.toml): manda as mensagens que ficaram na fila. Os outros horários são buscas.
+const SEND_CRON = "*/5 * * * *";
+
 export default {
-  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    if (controller.cron === SEND_CRON) {
+      ctx.waitUntil(
+        drainQueue(env).then((r) => {
+          if (r.sent || r.pending || r.errors.length) console.log(`fila: enviadas=${r.sent} pendentes=${r.pending}`, r.errors.join(" | "));
+        }),
+      );
+      return;
+    }
     ctx.waitUntil(
-      run(env, { announceEmpty: true }).then((r) => console.log(`encontradas=${r.found} enviadas=${r.sent}`, JSON.stringify(r.report))),
+      run(env, { announceEmpty: true }).then((r) =>
+        console.log(`encontradas=${r.found} enviadas=${r.sent} na fila=${r.messagesPending}`, JSON.stringify(r.report)),
+      ),
     );
   },
 
@@ -25,6 +39,7 @@ export default {
   // GET /run?key=...&dry=1    → só mostra o que seria enviado
   // GET /run?key=...&ping=1   → manda uma mensagem de teste para o administrador
   // GET /run?key=...&open=ID  → manda as vagas abertas agora só para o chat ID (sem marcar como vistas)
+  // GET /run?key=...&drain=1  → manda o que estiver na fila de mensagens
   async fetch(req: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(req.url);
     if (url.pathname === "/telegram" && req.method === "POST") {
@@ -42,6 +57,7 @@ export default {
     if (url.pathname === "/setup") return Response.json(await setWebhook(env, url.origin));
     const openFor = url.searchParams.get("open");
     if (openFor) return Response.json({ sent: await sendOpenJobs(env, openFor) });
+    if (url.searchParams.has("drain")) return Response.json(await drainQueue(env));
     if (url.searchParams.has("ping")) {
       await sendMessage(env.TELEGRAM_TOKEN, adminChat(env.CHAT_IDS), "✅ Bot de vagas funcionando.");
       return new Response("ping enviado\n");

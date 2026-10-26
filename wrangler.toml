@@ -2,9 +2,10 @@ name = "apogeu-vagas"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
-# 08h e 18h no horário de Brasília (UTC-3)
+# Buscas às 08h e 18h no horário de Brasília (UTC-3); a cada 5 min, envio do que ficou na fila
+# (o segundo precisa ser igual a SEND_CRON em src/index.ts)
 [triggers]
-crons = ["0 11,21 * * *"]
+crons = ["0 11,21 * * *", "*/5 * * * *"]
 
 [[kv_namespaces]]
 binding = "SEEN"

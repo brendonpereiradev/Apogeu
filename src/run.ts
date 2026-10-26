@@ -1,8 +1,9 @@
 import { accept, dedupe } from "./filter";
 import type { Env } from "./index";
 import { SOURCES } from "./sources";
-import { adminChat, fixedChats, recipients, removeSubscriber } from "./subscribers";
-import { buildMessages, sendMessage, TelegramError } from "./telegram";
+import { deliver, enqueue, type Outgoing } from "./queue";
+import { adminChat, recipients } from "./subscribers";
+import { buildMessages } from "./telegram";
 import type { Job } from "./types";
 
 const SEEN_TTL = 60 * 86_400; // lembra vagas enviadas por 60 dias
@@ -35,9 +36,10 @@ async function collect(): Promise<{ jobs: Job[]; report: Record<string, SourceRe
   return { jobs: dedupe([...byId.values()]), report };
 }
 
-// Uma fonte que dá erro ou volta vazia provavelmente mudou o site: avisa o primeiro chat.
+// Uma fonte que dá erro ou volta vazia provavelmente mudou o site: devolve os avisos para o primeiro chat.
 // Só avisa na segunda execução seguida com problema, porque bloqueios de um horário só são comuns.
-async function warnBroken(env: Env, chatId: string, report: Record<string, SourceReport>) {
+async function warnBroken(env: Env, report: Record<string, SourceReport>): Promise<string[]> {
+  const warnings: string[] = [];
   for (const [name, r] of Object.entries(report)) {
     const failKey = `fail:${name}`;
     if (!r.error && r.raw > 0) {
@@ -51,21 +53,10 @@ async function warnBroken(env: Env, chatId: string, report: Record<string, Sourc
     const key = `warn:${name}`;
     if (await env.SEEN.get(key)) continue;
     const why = r.error ? `erro: ${r.error}` : "nenhuma vaga lida (o site pode ter mudado)";
-    await sendMessage(env.TELEGRAM_TOKEN, chatId, `⚠️ Fonte <b>${name}</b> com problema — ${why.replace(/</g, "&lt;")}`);
+    warnings.push(`⚠️ Fonte <b>${name}</b> com problema — ${why.replace(/</g, "&lt;")}`);
     await env.SEEN.put(key, "1", { expirationTtl: WARN_TTL });
   }
-}
-
-// Erro com um chat não pode travar o envio para os outros. Quem bloqueou o bot (403) sai da lista.
-async function deliver(env: Env, chatId: string, text: string, errors: string[]) {
-  try {
-    await sendMessage(env.TELEGRAM_TOKEN, chatId, text);
-  } catch (e) {
-    errors.push(String(e));
-    if (e instanceof TelegramError && e.status === 403 && !fixedChats(env.CHAT_IDS).includes(chatId)) {
-      await removeSubscriber(env.SEEN, chatId);
-    }
-  }
+  return warnings;
 }
 
 // Para quem acabou de se cadastrar: manda só para esse chat todas as vagas abertas agora
@@ -73,7 +64,7 @@ async function deliver(env: Env, chatId: string, text: string, errors: string[])
 export async function sendOpenJobs(env: Env, chatId: string): Promise<number> {
   const { jobs } = await collect();
   if (jobs.length === 0) return 0;
-  for (const text of buildMessages(jobs, "abertas")) await sendMessage(env.TELEGRAM_TOKEN, chatId, text);
+  await deliver(env, await enqueue(env.SEEN, buildMessages(jobs, "abertas").map((text) => ({ chat: chatId, text }))));
   return jobs.length;
 }
 
@@ -84,7 +75,8 @@ function noNewsMessage(): string {
   return `🔎 Nenhuma vaga nova de turismo ou recepção desde o último envio. Próxima busca às ${next}.`;
 }
 
-// Busca em todas as fontes e envia as vagas novas para todos os cadastrados.
+// Busca em todas as fontes e envia as vagas novas para todos os cadastrados. As mensagens passam
+// pela fila: as vagas já ficam marcadas como vistas e o que não couber nesta execução sai no cron de envio.
 // announceEmpty: manda o aviso de "nenhuma vaga nova" (só nos horários fixos; o /vagas responde por conta própria).
 export async function run(env: Env, opts: { dryRun?: boolean; announceEmpty?: boolean } = {}) {
   const { jobs, report } = await collect();
@@ -93,20 +85,26 @@ export async function run(env: Env, opts: { dryRun?: boolean; announceEmpty?: bo
   const fresh = jobs.filter((_, i) => seen[i] === null);
 
   const chats = await recipients(env.SEEN, env.CHAT_IDS);
-  const sendErrors: string[] = [];
+  let delivery = { sent: 0, pending: 0, errors: [] as string[] };
   if (!opts.dryRun) {
-    if (fresh.length > 0) {
-      for (const text of buildMessages(fresh)) {
-        for (const chatId of chats) await deliver(env, chatId, text, sendErrors);
-      }
-      await Promise.all(fresh.map((j) => env.SEEN.put(j.id, "1", { expirationTtl: SEEN_TTL })));
-    } else if (opts.announceEmpty) {
-      const text = noNewsMessage();
-      for (const chatId of chats) await deliver(env, chatId, text, sendErrors);
-    }
+    const messages: Outgoing[] = [];
+    const texts = fresh.length > 0 ? buildMessages(fresh) : opts.announceEmpty ? [noNewsMessage()] : [];
+    for (const text of texts) for (const chat of chats) messages.push({ chat, text });
     const admin = adminChat(env.CHAT_IDS);
-    if (admin) await warnBroken(env, admin, report);
+    if (admin) for (const text of await warnBroken(env, report)) messages.push({ chat: admin, text });
+
+    const queued = await enqueue(env.SEEN, messages);
+    await Promise.all(fresh.map((j) => env.SEEN.put(j.id, "1", { expirationTtl: SEEN_TTL })));
+    delivery = await deliver(env, queued);
   }
 
-  return { found: jobs.length, sent: opts.dryRun ? 0 : fresh.length, recipients: chats.length, sendErrors, report, fresh };
+  return {
+    found: jobs.length,
+    sent: opts.dryRun ? 0 : fresh.length,
+    recipients: chats.length,
+    messagesPending: delivery.pending,
+    sendErrors: delivery.errors,
+    report,
+    fresh,
+  };
 }

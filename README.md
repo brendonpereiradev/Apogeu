@@ -10,7 +10,7 @@
 
 Apogeu é um Cloudflare Worker em TypeScript que procura vagas de turismo, recepção, secretariado e atendimento (estágio, júnior e cargos de entrada) em cidades do Rio de Janeiro e vagas remotas. As buscas rodam às 08h e às 18h (horário de Brasília) e as vagas ainda não enviadas chegam pelo bot **@ApogeuCVBot**.
 
-Cada fonte em `src/sources/` devolve as vagas em um formato único; `src/filter.ts` aplica as regras de `src/config.ts` e remove as repetidas; `src/run.ts` envia para cada cadastrado e registra o que já foi enviado no Cloudflare KV. O acesso é por convite: quem abre o link `https://t.me/ApogeuCVBot?start=<INVITE_CODE>` fica cadastrado. O projeto roda no plano gratuito da Cloudflare, que limita cada execução a 50 requisições externas.
+Cada fonte em `src/sources/` devolve as vagas em um formato único; `src/filter.ts` aplica as regras de `src/config.ts` e remove as repetidas; `src/run.ts` registra as vagas no Cloudflare KV e coloca as mensagens numa fila (`src/queue.ts`), também no KV, de onde saem para cada cadastrado. O acesso é por convite: quem abre o link `https://t.me/ApogeuCVBot?start=<INVITE_CODE>` fica cadastrado. O projeto roda no plano gratuito da Cloudflare, que limita cada execução a 50 requisições externas: as buscas gastam a maior parte, e a mensagem que não couber fica na fila até o cron de envio, que roda a cada 5 minutos.
 
 ---
 
@@ -20,6 +20,7 @@ Cada fonte em `src/sources/` devolve as vagas em um formato único; `src/filter.
 |---|---|
 | Busca em várias fontes | Consulta CIEE, MUDES, Gupy, Catho, Vagas.com, InfoJobs e Sólides em paralelo. |
 | Filtros | Aceita só cidades configuradas ou vagas remotas de turismo ou recepção, de nível de entrada e publicadas há até 14 dias. |
+| Fila de envio | Mensagem só sai da fila depois que o Telegram aceita; o que não coube numa execução é enviado nos minutos seguintes. |
 | Sem repetição | Junta a mesma vaga publicada em mais de um site e lembra as enviadas por 60 dias. |
 | Comandos do bot | `/vagas` busca na hora, `/start` mostra o cadastro, `/ajuda` explica o uso e `/parar` cancela o recebimento. |
 | Avisos ao administrador | Avisa novos cadastros e fontes com erro ou sem resultado, no máximo uma vez por dia por fonte. |
