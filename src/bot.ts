@@ -16,10 +16,10 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 // Menu que o Telegram mostra ao digitar "/" (registrado pela rota /setup). Novo comando: inclua aqui.
 export const COMMANDS = [
-  { command: "vagas", description: "Buscar vagas novas agora" },
   { command: "start", description: "Ver se seu cadastro está ativo" },
-  { command: "ajuda", description: "Como o bot funciona e lista de comandos" },
   { command: "parar", description: "Deixar de receber vagas" },
+  { command: "vagas", description: "Buscar vagas novas agora" },
+  { command: "ajuda", description: "Como o bot funciona e lista de comandos" },
 ];
 
 const HELP =
