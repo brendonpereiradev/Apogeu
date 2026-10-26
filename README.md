@@ -10,9 +10,9 @@
 
 ## Sobre o projeto
 
-Apogeu é um Cloudflare Worker em TypeScript que procura vagas de turismo, recepção, secretariado e atendimento (estágio, júnior e cargos de entrada) em cidades do Rio de Janeiro e vagas remotas. As buscas rodam às 08h e às 18h (horário de Brasília) e as vagas ainda não enviadas chegam pelo bot **@ApogeuCVBot**.
+Apogeu é um Cloudflare Worker em TypeScript que procura vagas de turismo, recepção, secretariado e atendimento (estágio, júnior e cargos de entrada) em cidades do Rio de Janeiro e vagas remotas. As buscas rodam às 08h e às 18h (horário de Brasília) e as vagas ainda não enviadas chegam pelo bot do Telegram.
 
-Cada fonte em `src/sources/` devolve as vagas em um formato único; `src/filter.ts` aplica as regras de `src/config.ts` e remove as repetidas; `src/run.ts` registra as vagas no Cloudflare KV e coloca as mensagens numa fila (`src/queue.ts`), também no KV, de onde saem para cada cadastrado. O acesso é por convite: quem abre o link `https://t.me/ApogeuCVBot?start=<INVITE_CODE>` fica cadastrado. O projeto roda no plano gratuito da Cloudflare, que limita cada execução a 50 requisições externas: as buscas gastam a maior parte, e a mensagem que não couber fica na fila até o cron de envio, que roda a cada 5 minutos.
+Cada fonte em `src/sources/` devolve as vagas em um formato único; `src/filter.ts` aplica as regras de `src/config.ts` e remove as repetidas; `src/run.ts` registra as vagas no Cloudflare KV e coloca as mensagens numa fila (`src/queue.ts`), também no KV, de onde saem para cada cadastrado. O acesso é por convite: quem abre o link `https://t.me/<seu_bot>?start=<INVITE_CODE>` fica cadastrado. O projeto roda no plano gratuito da Cloudflare, que limita cada execução a 50 requisições externas: as buscas gastam a maior parte, e a mensagem que não couber fica na fila até o cron de envio, que roda a cada 5 minutos.
 
 ---
 

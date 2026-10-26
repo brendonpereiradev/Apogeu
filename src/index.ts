@@ -52,7 +52,7 @@ export default {
       ctx.waitUntil(handleUpdate(env, update).catch((e) => console.error("webhook", e)));
       return new Response("ok");
     }
-    if (url.pathname !== "/run" && url.pathname !== "/setup") return new Response("ApogeuCVBot ok\n");
+    if (url.pathname !== "/run" && url.pathname !== "/setup") return new Response("Apogeu ok\n");
     if (!env.RUN_KEY || url.searchParams.get("key") !== env.RUN_KEY) return new Response("forbidden\n", { status: 403 });
     if (url.pathname === "/setup") return Response.json(await setWebhook(env, url.origin));
     const openFor = url.searchParams.get("open");
