@@ -1,23 +1,16 @@
 // ---------------------------------------------------------------------------
 // Buscas por fonte. O plano gratuito da Cloudflare permite 50 requisições por
-// execução: cada item abaixo é 1 requisição (somando tudo, hoje ~38).
+// execução: cada item abaixo é 1 requisição (somando tudo, hoje 41). O envio pelo
+// Telegram também conta (1 por mensagem, para cada cadastrado), então deixe folga.
 // ---------------------------------------------------------------------------
 
-// Gupy: busca pelo título da vaga.
-export const GUPY_TERMS = [
-  "turismo",
-  "estágio turismo",
-  "estágio hotelaria",
-  "trainee hotelaria",
-  "agente de viagens",
-  "consultor de viagens",
-  "viagens",
-  "hotel",
-  "hotelaria",
-  "hospedagem",
-  "pousada",
-  "eventos",
-];
+// Gupy: busca pelo título da vaga (o termo pega também títulos maiores: "viagens" já traz
+// "agente de viagens", "hotel" já traz "hotelaria").
+export const GUPY_TERMS = ["turismo", "viagens", "hotel", "hospedagem", "pousada", "eventos"];
+
+// Gupy, só no estado do RJ: termos comuns no Brasil todo, em que as 100 vagas da busca
+// sem filtro seriam quase todas de fora.
+export const GUPY_RJ_TERMS = ["recepcionista", "recepção", "secretária", "atendente"];
 
 // CIEE: área profissional "Turismo/Lazer" (estágio, nível superior).
 export const CIEE_AREAS = [37];
@@ -41,6 +34,9 @@ export const CATHO_PATHS = [
   "hotelaria/rio-de-janeiro-rj",
   "turismo/niteroi-rj",
   "turismo/sao-goncalo-rj",
+  "recepcionista/rio-de-janeiro-rj",
+  "recepcionista/niteroi-rj",
+  "recepcionista/sao-goncalo-rj",
 ];
 
 // Vagas.com: final de vagas.com.br/vagas-de-...
@@ -49,15 +45,19 @@ export const VAGASCOM_PATHS = [
   "hotelaria-em-rio-de-janeiro",
   "turismo-em-niteroi",
   "turismo-em-sao-goncalo",
+  "recepcionista-em-rio-de-janeiro", // traz também atendente
 ];
 
 // InfoJobs: páginas de busca por área e cidade.
 export const INFOJOBS_PATHS = [
   "vagas-de-emprego-turismo-em-rio-de-janeiro,-rj.aspx",
   "vagas-de-emprego-hotelaria-em-rio-de-janeiro,-rj.aspx",
+  "vagas-de-emprego-recepcionista-em-rio-de-janeiro,-rj.aspx",
+  "vagas-de-emprego-secretaria-em-rio-de-janeiro,-rj.aspx",
 ];
 
-// Sólides: termo → quantas páginas (14 vagas cada, mais novas primeiro).
+// Sólides: termo → quantas páginas (14 vagas cada, mais novas primeiro). Não filtra por cidade,
+// por isso recepção fica de fora (as 14 vagas de "recepcionista" vêm do Brasil todo).
 export const SOLIDES_TERMS: Record<string, number> = {
   turismo: 2,
   hotelaria: 1,
@@ -83,7 +83,8 @@ export const CITIES = [
 // Vagas 100% remotas também entram (qualquer cidade).
 export const INCLUDE_REMOTE = true;
 
-// A vaga só entra se o título ou o nome da empresa tiver um destes trechos.
+// A vaga só entra se o título ou o nome da empresa tiver um destes trechos de turismo,
+// ou se o título tiver um dos trechos de RECEPTION_WORDS.
 // (Não vale para CIEE e MUDES, que já buscam pelo curso/área de turismo.)
 export const TOURISM_WORDS = [
   "turismo",
@@ -106,6 +107,10 @@ export const TOURISM_WORDS = [
   "bondinho",
   "cvc",
 ];
+
+// Recepção, secretariado e atendimento. Só o título conta: empresas como "Secretaria
+// Municipal de Saúde" trariam vagas de qualquer área.
+export const RECEPTION_WORDS = ["recepcion", "recepcao", "front desk", "secretari", "atendente"];
 
 // Vagas com qualquer um destes trechos no título são descartadas (fora da área).
 export const EXCLUDE_TITLE = [
@@ -149,6 +154,13 @@ export const EXCLUDE_TITLE = [
   "fraude",
   "cartao",
   "disponibilidade para viag",
+  // atendente de comida (mesma linha de cozinha/garçom acima)
+  "atendente de restaurante",
+  "atendente restaurante",
+  "lanchonete",
+  "fast food",
+  "padaria",
+  "balconista",
 ];
 
 // Níveis acima de júnior/estágio (palavras inteiras no título ou no nível da vaga).

@@ -81,7 +81,7 @@ export async function sendOpenJobs(env: Env, chatId: string): Promise<number> {
 function noNewsMessage(): string {
   const hour = Number(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo", hour: "numeric", hourCycle: "h23" }));
   const next = hour >= 8 && hour < 18 ? "18h" : "08h";
-  return `🔎 Nenhuma vaga nova de turismo desde o último envio. Próxima busca às ${next}.`;
+  return `🔎 Nenhuma vaga nova de turismo ou recepção desde o último envio. Próxima busca às ${next}.`;
 }
 
 // Busca em todas as fontes e envia as vagas novas para todos os cadastrados.

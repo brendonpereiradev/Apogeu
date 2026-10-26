@@ -21,7 +21,7 @@ function formatJob(j: Job): string {
 export function buildMessages(jobs: Job[], kind: "novas" | "abertas" = "novas"): string[] {
   const header =
     kind === "novas"
-      ? `✈️ <b>${jobs.length} ${jobs.length === 1 ? "vaga nova" : "vagas novas"} de turismo</b>`
+      ? `✈️ <b>${jobs.length} ${jobs.length === 1 ? "vaga nova" : "vagas novas"} de turismo e recepção</b>`
       : `📋 <b>${jobs.length} ${jobs.length === 1 ? "vaga aberta" : "vagas abertas"} agora</b>`;
   const messages: string[] = [];
   let current = header;

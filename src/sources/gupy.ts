@@ -1,4 +1,4 @@
-import { GUPY_TERMS } from "../config";
+import { GUPY_RJ_TERMS, GUPY_TERMS } from "../config";
 import type { Job, Source } from "../types";
 import { getJson } from "../util";
 
@@ -15,8 +15,9 @@ interface GupyJob {
 
 const WORKPLACE: Record<string, Job["workplaceType"]> = { "on-site": "on-site", hybrid: "hybrid", remote: "remote" };
 
-async function search(term: string): Promise<Job[]> {
-  const url = `https://portal.gupy.io/api/job-search/jobs?jobName=${encodeURIComponent(term)}&limit=100&offset=0`;
+async function search(term: string, state = ""): Promise<Job[]> {
+  const filter = state ? `&state=${encodeURIComponent(state)}` : "";
+  const url = `https://portal.gupy.io/api/job-search/jobs?jobName=${encodeURIComponent(term)}&limit=100&offset=0${filter}`;
   const body = await getJson<{ data?: GupyJob[] }>(url);
   return (body.data ?? []).map((j) => ({
     id: `gupy:${j.id}`,
@@ -33,5 +34,8 @@ async function search(term: string): Promise<Job[]> {
 
 export const gupy: Source = {
   name: "Gupy",
-  fetch: async () => (await Promise.all(GUPY_TERMS.map(search))).flat(),
+  fetch: async () =>
+    (
+      await Promise.all([...GUPY_TERMS.map((t) => search(t)), ...GUPY_RJ_TERMS.map((t) => search(t, "Rio de Janeiro"))])
+    ).flat(),
 };

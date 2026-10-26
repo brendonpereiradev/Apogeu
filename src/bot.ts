@@ -23,7 +23,7 @@ export const COMMANDS = [
 ];
 
 const HELP =
-  "Você recebe aqui vagas de turismo (estágio e nível inicial) em São Gonçalo, Niterói e região, às 08h e às 18h.\n\n" +
+  "Você recebe aqui vagas de turismo, recepção, secretariado e atendimento (estágio e nível inicial) em São Gonçalo, Niterói e região, às 08h e às 18h.\n\n" +
   COMMANDS.map((c) => `/${c.command} — ${c.description}`).join("\n");
 
 // Webhook do Telegram: trata /start <convite> e /parar.

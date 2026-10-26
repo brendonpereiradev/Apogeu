@@ -1,16 +1,18 @@
-import { CITIES, EXCLUDE_LEVEL, EXCLUDE_TITLE, INCLUDE_REMOTE, MAX_AGE_DAYS, TOURISM_WORDS } from "./config";
+import { CITIES, EXCLUDE_LEVEL, EXCLUDE_TITLE, INCLUDE_REMOTE, MAX_AGE_DAYS, RECEPTION_WORDS, TOURISM_WORDS } from "./config";
 import type { Job } from "./types";
 import { normalize } from "./util";
 
 const CITY_SET = new Set(CITIES.map(normalize));
 const EXCLUDE = EXCLUDE_TITLE.map(normalize);
 const TOURISM = TOURISM_WORDS.map(normalize);
+const RECEPTION = RECEPTION_WORDS.map(normalize);
 const LEVEL_RE = new RegExp(`(^|[^a-z0-9])(${EXCLUDE_LEVEL.map(normalize).join("|")})($|[^a-z0-9])`);
 
 export function accept(j: Job, now = Date.now()): boolean {
   const title = normalize(j.title);
   const company = normalize(j.company);
-  if (!j.prefiltered && !TOURISM.some((x) => title.includes(x) || company.includes(x))) return false;
+  const inArea = TOURISM.some((x) => title.includes(x) || company.includes(x)) || RECEPTION.some((x) => title.includes(x));
+  if (!j.prefiltered && !inArea) return false;
   if (EXCLUDE.some((x) => title.includes(x))) return false;
   if (LEVEL_RE.test(title) || LEVEL_RE.test(normalize(j.level ?? ""))) return false;
   if (j.publishedDate && Date.parse(j.publishedDate) < now - MAX_AGE_DAYS * 86_400_000) return false;
