@@ -1,4 +1,6 @@
-<h1 align="center">Apogeu</h1>
+<p align="center">
+  <img src="assets/apogeu-banner.svg" width="560" alt="Apogeu, vagas de turismo e recepção">
+</p>
 
 <p align="center">
   Bot do Telegram que reúne vagas de turismo, hotelaria e recepção de vários sites e envia as novas duas vezes por dia.
