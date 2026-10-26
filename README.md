@@ -4,10 +4,6 @@
   Bot do Telegram que reúne vagas de turismo e hotelaria de vários sites e envia as novas duas vezes por dia.
 </p>
 
-<p align="center">
-  <img src="assets/logo.png" alt="Logotipo do Apogeu" width="180" />
-</p>
-
 ---
 
 ## Sobre o projeto
